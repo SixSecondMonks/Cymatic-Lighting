@@ -1,8 +1,10 @@
-#include <Adafruit_NeoPixel.h>
-#define PIN 5
-#define CNT_LIGHTS 60
+#include "FastLED.h"
+#define NUM_LEDS_PER_STRIP 75
+CRGB leds[NUM_LEDS_PER_STRIP];
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(CNT_LIGHTS, PIN, NEO_GRB + NEO_KHZ800); 
+#define PIN 5
+#define CNT_LIGHTS 75
+
 //fixed settings 
 int analogPinL = 1; // read from multiplexer using analog input 0
 int analogPinR = 0; // read from multiplexer using analog input 0
@@ -34,8 +36,9 @@ int refresh = 20;
 void setup() 
 {
   Serial.begin(9600); // print to serial monitor
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  
+  FastLED.addLeds<P9813>(leds, NUM_LEDS_PER_STRIP);
+
   pinMode(analogPinL, INPUT);
   pinMode(analogPinR, INPUT);
   pinMode(strobePin, OUTPUT);
@@ -43,6 +46,8 @@ void setup()
   analogReference(DEFAULT);
   digitalWrite(resetPin, LOW);
   digitalWrite(strobePin, HIGH); 
+
+  randomSeed(analogRead(0));
 }
  
 void loop() 
@@ -91,6 +96,12 @@ void runTime()
           tmp_refresh_adj+= 23;
     if( spectrumValueR[i] > 400 && i <=1)
           tmp_refresh_adj+= 23;
+//
+//    Serial.print("Spectrum L value:");
+//    Serial.println(spectrumValueL[i]);
+//    
+//    Serial.print("Spectrum R value:");
+//    Serial.println(spectrumValueR[i]);
     
     digitalWrite(strobePin, HIGH); 
    
@@ -103,9 +114,6 @@ void runTime()
   
   use_refresh = 0;
  
-  
-  
-
   if(tmp_refresh_adj < 0) { tmp_refresh_adj = 0; }
   if(tmp_refresh_adj > 200) { tmp_refresh_adj = 200; }
  
@@ -146,11 +154,18 @@ void runTime()
     for (k = 0; k < CNT_LIGHTS; k++)
     {
       num = prop[k];
-      //Serial.println(num);
+      
+//      Serial.print("Num is: ");
+//      Serial.println(num);
+      
       if(num>=0)
       {
         get_color();
-        strip.setPixelColor( k, useColor[0], useColor[1], useColor[2]);
+        
+        leds[k].red = useColor[1];
+        leds[k].green = useColor[0];
+        leds[k].blue = useColor[2];
+        
       }//if
     }//for
          
@@ -158,7 +173,7 @@ void runTime()
   }//if refresh  
 
   
-  strip.show();
+  FastLED.show();
 }
  
 void get_color()
@@ -185,6 +200,10 @@ void get_color()
 
 void getWaveLength()
 {
+
+  //Serial.print("Num inside wave is: ");
+  //Serial.println(num);
+  
   float minVal = 500;
   float maxVal = 4700;
   float minWave = 350;
@@ -193,8 +212,14 @@ void getWaveLength()
   minVal = 0;
   if(num>maxVal)
     maxVal = num;
-    
+
   waveValue = ((num - minVal) / (maxVal-minVal) * (maxWave - minWave)) + minWave;
+
+  waveValue = random(0,650);
+
+      //Serial.print("WaveValue is: ");
+      //Serial.println(waveValue);
+
 }
 
 void getRGB()
@@ -253,7 +278,12 @@ void getRGB()
     useColor[0] = g;
     useColor[1] = r;
     useColor[2] = b;
-  
+
+//    Serial.print("useColor is (grb): ");
+//    Serial.print(useColor[0]);
+//    Serial.print(" ");
+//    Serial.print(useColor[1]);
+//    Serial.print(" ");
+//    Serial.println(useColor[2]);
+//  
 }
-
-
